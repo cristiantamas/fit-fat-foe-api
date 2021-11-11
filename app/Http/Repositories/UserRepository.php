@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Repositories;
 
+use Exception;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 
 class UserRepository {
 
@@ -13,12 +15,10 @@ class UserRepository {
         try{
             return User::findOrFail($userId);
         }
-        catch (Exception $e) {
+        catch (\Exception $e) {
             throw new Exception('Could not get user');
         }
-
     }
-
 
     public function createUser(array $data): User
     {
@@ -30,7 +30,7 @@ class UserRepository {
                 'password' => Hash::make($data['password'])
             ]);
         }
-        catch (Exception $e) {
+        catch (\Exception $e) {
             throw new Exception('Could not create user');
         }
     }

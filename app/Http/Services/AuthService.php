@@ -4,15 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Services;
 
-use App\Http\Repositories\UserRepository;
-use App\Models\User;
+use App\Http\Managers\FitFatFoeApiManager;
 use Illuminate\Http\JsonResponse;
 use App\Http\Requests\AuthRequest;
 use Illuminate\Support\Facades\Auth;
 
 class AuthService {
 
-    public function __construct(private AuthRequest $authRequest, private UserRepository $userRepository)
+    public function __construct(private AuthRequest $authRequest, private FitFatFoeApiManager $apiManager)
     {
         $this->authRequest->replace($this->authRequest->validated());
     }
@@ -24,18 +23,18 @@ class AuthService {
         }
 
         $user = auth()->user();
+        $token = $this->apiManager->getTokenService()->getTokenForUser($user);
 
         return response()->json([
-            'token' => $this->getToken($user),
+            'token' => $token,
             'user' => $user
         ]);
     }
 
     public function register(): JsonResponse
     {
-        $user = $this->userRepository->createUser($this->authRequest->all());
-
-        $token = $this->getToken($user);
+        $user = $this->apiManager->getUserRepository()->createUser($this->authRequest->all());
+        $token = $this->apiManager->getTokenService()->getTokenForUser($user);
 
         return response()->json([
             'token' => $token,
@@ -50,10 +49,5 @@ class AuthService {
         return response()->json([
             'message' => 'Tokens Revoked'
         ]);
-    }
-
-    private function getToken(User $user): string
-    {
-        return $user->createToken('API Token')->plainTextToken;
     }
 }
